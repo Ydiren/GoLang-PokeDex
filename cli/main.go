@@ -80,24 +80,22 @@ func commandExit(_ *PokeData) error {
 }
 
 func commandMap(pokeData *PokeData) error {
-	newPokeData, err := GetNextLocations(pokeData)
+	err := pokeData.GetNextLocations()
 	if err != nil {
 		return err
 	}
 
-	pokeData.CopyFrom(newPokeData)
 	printLocations(pokeData)
 	return nil
 }
 
 func commandMapB(pokeData *PokeData) error {
-	newPokeData, err := GetPreviousLocations(pokeData)
+	err := pokeData.GetPreviousLocations()
 	if err != nil {
 		return err
 	}
 
-	pokeData.CopyFrom(newPokeData)
-	printLocations(newPokeData)
+	printLocations(pokeData)
 	return nil
 }
 
