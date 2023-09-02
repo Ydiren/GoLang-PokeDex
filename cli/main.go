@@ -3,7 +3,8 @@ package main
 import (
 	"bufio"
 	"fmt"
-	. "github.com/ydiren/pokedexcli/internal"
+	. "github.com/ydiren/pokedexcli/internal/pokeapi"
+	//. "github.com/ydiren/pokedexcli/internal/pokecache"
 	"os"
 )
 
