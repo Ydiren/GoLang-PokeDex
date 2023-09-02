@@ -62,7 +62,7 @@ func main() {
 	}
 }
 
-func commandHelp(config *PokeData) error {
+func commandHelp(_ *PokeData) error {
 	fmt.Println("PokeDex CLI")
 	fmt.Println("Usage:")
 	fmt.Println()
@@ -74,7 +74,7 @@ func commandHelp(config *PokeData) error {
 	return nil
 }
 
-func commandExit(pokeData *PokeData) error {
+func commandExit(_ *PokeData) error {
 	os.Exit(0)
 	return nil
 }

@@ -48,7 +48,11 @@ func getDataFromApi(url string) (*PokeData, error) {
 	}
 
 	body, err := io.ReadAll(resp.Body)
-	resp.Body.Close()
+	err = resp.Body.Close()
+	if err != nil {
+		fmt.Println(fmt.Sprintf("Failed to close response body with error '%s'", err))
+		return nil, err
+	}
 
 	if resp.StatusCode > 299 {
 		return nil, errors.New(fmt.Sprintf("Response failed with code '%d' and body '%s'", resp.StatusCode, resp.Body))
@@ -67,7 +71,7 @@ func getDataFromApi(url string) (*PokeData, error) {
 func GetPreviousLocations(data *PokeData) (*PokeData, error) {
 	var previousUri string
 	if data.Previous == nil {
-		return nil, errors.New("Cannot go to previous locations. You're already at the first location in the list!")
+		return nil, errors.New("cannot go to previous locations. You're already at the first location in the list")
 	} else {
 		previousUri = *data.Previous
 	}
