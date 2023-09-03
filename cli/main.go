@@ -56,10 +56,13 @@ func main() {
 		var input string
 		if ok {
 			input = scanner.Text()
+			if len(input) == 0 {
+				continue
+			}
 
-			command, ok := commands[input]
+			commandName, firstArg := getCommandNameAndArg(input)
+			command, ok := commands[*commandName]
 			if ok {
-				firstArg := getFirstCommandArg(input)
 				err := command.callback(&pokeData, firstArg)
 				if err != nil {
 					fmt.Println(err)
@@ -69,13 +72,13 @@ func main() {
 	}
 }
 
-func getFirstCommandArg(input string) *string {
+func getCommandNameAndArg(input string) (*string, *string) {
 	args := strings.Fields(input)
 	if len(args) > 1 {
-		return &args[1]
+		return &args[0], &args[1]
 	}
 
-	return nil
+	return &args[0], nil
 }
 
 func commandHelp(_ *PokeLocations, _ *string) error {
@@ -86,6 +89,7 @@ func commandHelp(_ *PokeLocations, _ *string) error {
 	fmt.Println("\tmapb\tDisplay the previous set of map locations")
 	fmt.Println("\thelp\tPrints this help text")
 	fmt.Println("\texit\tExits the application")
+	fmt.Println("\texplore\tExplore the map location")
 	fmt.Println()
 	return nil
 }
@@ -120,15 +124,25 @@ func printLocations(locations *PokeLocations) {
 	}
 }
 
-func commandExplore(locations *PokeLocations, locationName *string) error {
+func commandExplore(_ *PokeLocations, locationName *string) error {
 	if locationName == nil {
-		return errors.New("Command locationName is nil")
+		return errors.New("Please provide a location name")
 	}
 
-	////err := locations.GetLocationPokemon(locationName)
-	//if err != nil {
-	//	return err
-	//}
+	fmt.Printf("Exploring: %v...\n", *locationName)
+	fmt.Println("Found Pokemon:")
 
+	pokemon, err := GetPokemonAtLocation(locationName)
+	if err != nil {
+		return err
+	}
+
+	printPokemon(pokemon)
 	return nil
+}
+
+func printPokemon(pokemon []Pokemon) {
+	for i := 0; i < len(pokemon); i++ {
+		fmt.Printf(" - %v\n", pokemon[i].Name)
+	}
 }

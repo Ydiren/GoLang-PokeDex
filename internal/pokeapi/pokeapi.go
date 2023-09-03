@@ -1,6 +1,7 @@
 package pokeapi
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/ydiren/pokedexcli/internal/pokecache"
@@ -15,36 +16,31 @@ const (
 
 var cache = pokecache.NewCache(5 * time.Minute)
 
-func (data *PokeLocations) GetNextLocations() error {
-	nextUri := data.Next
-
-	return data.getLocationsData(nextUri)
-}
-
-func (data *PokeLocations) GetPreviousLocations() error {
-	var previousUri string
-	if data.Previous == nil {
-		return errors.New("Cannot go to previous locations. You're already at the first location in the list")
-	} else {
-		previousUri = *data.Previous
+func GetPokemonAtLocation(locationName *string) ([]Pokemon, error) {
+	if locationName == nil {
+		return nil, errors.New("locationName cannot be nil")
 	}
 
-	return data.getLocationsData(previousUri)
-}
-
-func (data *PokeLocations) getLocationsData(previousUri string) error {
-	body, err := getDataFromApi(previousUri)
+	locationUri := DefaultApiLocationsUri + *locationName
+	body, err := getDataFromApi(locationUri)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	err = data.parseData(body)
+	location := PokeSingleLocation{}
+	err = json.Unmarshal(body, &location)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	cache.Add(previousUri, body)
-	return nil
+	cache.Add(locationUri, body)
+
+	pokemon := make([]Pokemon, len(location.PokemonEncounters))
+	for i := 0; i < len(location.PokemonEncounters); i++ {
+		pokemon[i] = location.PokemonEncounters[i].Pokemon
+	}
+
+	return pokemon, nil
 }
 
 func getDataFromApi(url string) ([]byte, error) {
