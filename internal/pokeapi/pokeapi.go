@@ -11,12 +11,12 @@ import (
 )
 
 const (
-	DefaultApiLocationsUri = "https://pokeapi.co/api/v2/location/"
+	DefaultApiLocationsUri = "https://pokeapi.co/api/v2/location-area/"
 )
 
 var cache = pokecache.NewCache(5 * time.Minute)
 
-func (data *PokeData) GetNextLocations() error {
+func (data *PokeLocations) GetNextLocations() error {
 	nextUri := data.Next
 
 	err := data.getDataFromApi(nextUri)
@@ -27,7 +27,7 @@ func (data *PokeData) GetNextLocations() error {
 	return nil
 }
 
-func (data *PokeData) GetPreviousLocations() error {
+func (data *PokeLocations) GetPreviousLocations() error {
 	var previousUri string
 	if data.Previous == nil {
 		return errors.New("Cannot go to previous locations. You're already at the first location in the list")
@@ -44,7 +44,7 @@ func (data *PokeData) GetPreviousLocations() error {
 	return nil
 }
 
-func (data *PokeData) getDataFromApi(url string) error {
+func (data *PokeLocations) getDataFromApi(url string) error {
 	val, ok := cache.Get(url)
 	if ok {
 		err := json.Unmarshal(val, &data)

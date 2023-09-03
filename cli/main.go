@@ -11,11 +11,11 @@ import (
 type cliCommand struct {
 	command     string
 	description string
-	callback    func(*PokeData) error
+	callback    func(*PokeLocations) error
 }
 
 func main() {
-	pokeData := PokeData{
+	pokeData := PokeLocations{
 		Next:     DefaultApiLocationsUri,
 		Previous: nil,
 	}
@@ -62,7 +62,7 @@ func main() {
 	}
 }
 
-func commandHelp(_ *PokeData) error {
+func commandHelp(_ *PokeLocations) error {
 	fmt.Println("PokeDex CLI")
 	fmt.Println("Usage:")
 	fmt.Println()
@@ -74,12 +74,12 @@ func commandHelp(_ *PokeData) error {
 	return nil
 }
 
-func commandExit(_ *PokeData) error {
+func commandExit(_ *PokeLocations) error {
 	os.Exit(0)
 	return nil
 }
 
-func commandMap(pokeData *PokeData) error {
+func commandMap(pokeData *PokeLocations) error {
 	err := pokeData.GetNextLocations()
 	if err != nil {
 		return err
@@ -89,7 +89,7 @@ func commandMap(pokeData *PokeData) error {
 	return nil
 }
 
-func commandMapB(pokeData *PokeData) error {
+func commandMapB(pokeData *PokeLocations) error {
 	err := pokeData.GetPreviousLocations()
 	if err != nil {
 		return err
@@ -99,8 +99,7 @@ func commandMapB(pokeData *PokeData) error {
 	return nil
 }
 
-func printLocations(locations *PokeData) {
-	fmt.Println(locations.Count)
+func printLocations(locations *PokeLocations) {
 	for i := 0; i < len(locations.Results); i++ {
 		fmt.Println(locations.Results[i].Name)
 	}
