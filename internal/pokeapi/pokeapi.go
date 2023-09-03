@@ -1,7 +1,6 @@
 package pokeapi
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/ydiren/pokedexcli/internal/pokecache"
@@ -19,12 +18,7 @@ var cache = pokecache.NewCache(5 * time.Minute)
 func (data *PokeLocations) GetNextLocations() error {
 	nextUri := data.Next
 
-	err := data.getDataFromApi(nextUri)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return data.getLocationsData(nextUri)
 }
 
 func (data *PokeLocations) GetPreviousLocations() error {
@@ -35,49 +29,45 @@ func (data *PokeLocations) GetPreviousLocations() error {
 		previousUri = *data.Previous
 	}
 
-	err := data.getDataFromApi(previousUri)
+	return data.getLocationsData(previousUri)
+}
 
+func (data *PokeLocations) getLocationsData(previousUri string) error {
+	body, err := getDataFromApi(previousUri)
 	if err != nil {
 		return err
 	}
 
+	err = data.parseData(body)
+	if err != nil {
+		return err
+	}
+
+	cache.Add(previousUri, body)
 	return nil
 }
 
-func (data *PokeLocations) getDataFromApi(url string) error {
+func getDataFromApi(url string) ([]byte, error) {
 	val, ok := cache.Get(url)
 	if ok {
-		err := json.Unmarshal(val, &data)
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-		return nil
+		return val, nil
 	}
 
 	resp, err := http.Get(url)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	err = resp.Body.Close()
 	if err != nil {
 		fmt.Println(fmt.Sprintf("Failed to close response body with error '%s'", err))
-		return err
+		return nil, err
 	}
 
 	if resp.StatusCode > 299 {
-		return errors.New(fmt.Sprintf("Response failed with code '%d' and body '%s'", resp.StatusCode, resp.Body))
+		return nil, errors.New(fmt.Sprintf("Response failed with code '%d' and body '%s'", resp.StatusCode, resp.Body))
 	}
 
-	err = json.Unmarshal(body, &data)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
-	cache.Add(url, body)
-
-	return nil
+	return body, nil
 }

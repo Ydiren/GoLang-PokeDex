@@ -2,16 +2,17 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	. "github.com/ydiren/pokedexcli/internal/pokeapi"
-	//. "github.com/ydiren/pokedexcli/internal/pokecache"
 	"os"
+	"strings"
 )
 
 type cliCommand struct {
 	command     string
 	description string
-	callback    func(*PokeLocations) error
+	callback    func(*PokeLocations, *string) error
 }
 
 func main() {
@@ -40,6 +41,11 @@ func main() {
 			description: "Retrieves the previous page of map locations",
 			callback:    commandMapB,
 		},
+		"explore": {
+			command:     "explore",
+			description: "Explore the map location",
+			callback:    commandExplore,
+		},
 	}
 
 	for {
@@ -53,7 +59,8 @@ func main() {
 
 			command, ok := commands[input]
 			if ok {
-				err := command.callback(&pokeData)
+				firstArg := getFirstCommandArg(input)
+				err := command.callback(&pokeData, firstArg)
 				if err != nil {
 					fmt.Println(err)
 				}
@@ -62,7 +69,16 @@ func main() {
 	}
 }
 
-func commandHelp(_ *PokeLocations) error {
+func getFirstCommandArg(input string) *string {
+	args := strings.Fields(input)
+	if len(args) > 1 {
+		return &args[1]
+	}
+
+	return nil
+}
+
+func commandHelp(_ *PokeLocations, _ *string) error {
 	fmt.Println("PokeDex CLI")
 	fmt.Println("Usage:")
 	fmt.Println()
@@ -74,12 +90,12 @@ func commandHelp(_ *PokeLocations) error {
 	return nil
 }
 
-func commandExit(_ *PokeLocations) error {
+func commandExit(_ *PokeLocations, _ *string) error {
 	os.Exit(0)
 	return nil
 }
 
-func commandMap(pokeData *PokeLocations) error {
+func commandMap(pokeData *PokeLocations, _ *string) error {
 	err := pokeData.GetNextLocations()
 	if err != nil {
 		return err
@@ -89,7 +105,7 @@ func commandMap(pokeData *PokeLocations) error {
 	return nil
 }
 
-func commandMapB(pokeData *PokeLocations) error {
+func commandMapB(pokeData *PokeLocations, _ *string) error {
 	err := pokeData.GetPreviousLocations()
 	if err != nil {
 		return err
@@ -98,9 +114,21 @@ func commandMapB(pokeData *PokeLocations) error {
 	printLocations(pokeData)
 	return nil
 }
-
 func printLocations(locations *PokeLocations) {
 	for i := 0; i < len(locations.Results); i++ {
 		fmt.Println(locations.Results[i].Name)
 	}
+}
+
+func commandExplore(locations *PokeLocations, locationName *string) error {
+	if locationName == nil {
+		return errors.New("Command locationName is nil")
+	}
+
+	////err := locations.GetLocationPokemon(locationName)
+	//if err != nil {
+	//	return err
+	//}
+
+	return nil
 }
