@@ -20,15 +20,14 @@ func commandCatch(pokemonName *string) error {
 		return err
 	}
 
-	fmt.Printf("Pokemon Details: %d\n", pokemonDetails.BaseExperience)
-
 	random := rand.Intn(pokemonDetails.BaseExperience)
 
+	titleCaseName := properTitle(pokemonDetails.Name)
 	if random > 100 {
-		fmt.Printf("%s ran away!\n", *pokemonName)
+		fmt.Printf("%s ran away!\n", titleCaseName)
 		return nil
 	} else {
-		fmt.Printf("%s was caught!\n", *pokemonName)
+		fmt.Printf("%s was caught!\n", titleCaseName)
 	}
 
 	key := strings.ToLower(*pokemonName)
