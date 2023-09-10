@@ -12,7 +12,7 @@ func commandExplore(locationName *string) error {
 	}
 
 	fmt.Printf("Exploring: %v...\n", *locationName)
-	fmt.Println("Found CaughtPokemon:")
+	fmt.Println("Found Pokemon:")
 
 	pokemon, err := pokeapi.GetPokemonAtLocation(locationName)
 	if err != nil {

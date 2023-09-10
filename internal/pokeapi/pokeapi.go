@@ -34,6 +34,9 @@ func getDataFromApi(url string) ([]byte, error) {
 		return nil, err
 	}
 
+	if resp.StatusCode == 404 {
+		return nil, errors.New(fmt.Sprintf("Not found!"))
+	}
 	if resp.StatusCode > 399 {
 		return nil, errors.New(fmt.Sprintf("Response failed with code '%d' and body '%s'", resp.StatusCode, resp.Body))
 	}
