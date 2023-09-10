@@ -19,7 +19,7 @@ func commandCatch(pokemonName *string) error {
 		return err
 	}
 
-	fmt.Println("Pokemon Details: %v\n", pokemonDetails.BaseExperience)
+	fmt.Println("CaughtPokemon Details: %v\n", pokemonDetails.BaseExperience)
 
 	random := rand.Intn(pokemonDetails.BaseExperience)
 
@@ -30,7 +30,7 @@ func commandCatch(pokemonName *string) error {
 		fmt.Printf("%v was caught!\n", *pokemonName)
 	}
 
-	pokedex.Pokemon[*pokemonName] = *pokemonDetails
+	pokedex.CaughtPokemon[*pokemonName] = *pokemonDetails
 
 	return nil
 }

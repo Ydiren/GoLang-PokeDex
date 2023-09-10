@@ -15,11 +15,11 @@ type CliProcessor struct {
 	commands map[string]CliCommand
 }
 
-func NewCliProcessor(commands []CliCommand) *CliProcessor {
+func NewCliProcessor(commands map[string]CliCommand) *CliProcessor {
 	processor := new(CliProcessor)
 	processor.commands = make(map[string]CliCommand)
-	for _, command := range commands {
-		processor.commands[command.Command] = command
+	for key, command := range commands {
+		processor.commands[key] = command
 	}
 	return processor
 }
