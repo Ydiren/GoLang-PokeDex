@@ -12,6 +12,7 @@ import (
 
 const (
 	DefaultApiLocationsUri = "https://pokeapi.co/api/v2/location-area/"
+	PokemonDetailsUri      = "https://pokeapi.co/api/v2/pokemon/"
 )
 
 var cache = pokecache.NewCache(5 * time.Minute)
@@ -33,14 +34,28 @@ func GetPokemonAtLocation(locationName *string) ([]Pokemon, error) {
 		return nil, err
 	}
 
-	cache.Add(locationUri, body)
-
 	pokemon := make([]Pokemon, len(location.PokemonEncounters))
 	for i := 0; i < len(location.PokemonEncounters); i++ {
 		pokemon[i] = location.PokemonEncounters[i].Pokemon
 	}
 
 	return pokemon, nil
+}
+
+func GetPokemonDetails(pokemonName *string) (*PokemonDetails, error) {
+	pokemonUri := PokemonDetailsUri + *pokemonName
+	body, err := getDataFromApi(pokemonUri)
+	if err != nil {
+		return nil, err
+	}
+
+	pokemonDetails := PokemonDetails{}
+	err = json.Unmarshal(body, &pokemonDetails)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pokemonDetails, nil
 }
 
 func getDataFromApi(url string) ([]byte, error) {
@@ -61,9 +76,11 @@ func getDataFromApi(url string) ([]byte, error) {
 		return nil, err
 	}
 
-	if resp.StatusCode > 299 {
+	if resp.StatusCode > 399 {
 		return nil, errors.New(fmt.Sprintf("Response failed with code '%d' and body '%s'", resp.StatusCode, resp.Body))
 	}
+
+	cache.Add(url, body)
 
 	return body, nil
 }

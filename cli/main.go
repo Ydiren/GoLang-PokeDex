@@ -4,84 +4,80 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	. "github.com/ydiren/pokedexcli/internal/cliProcessor"
 	. "github.com/ydiren/pokedexcli/internal/pokeapi"
+	"math/rand"
 	"os"
-	"strings"
 )
 
-type cliCommand struct {
-	command     string
-	description string
-	callback    func(*PokeLocations, *string) error
+type Pokedex struct {
+	CurrentLocation PokeLocations
+	Pokemon         map[string]PokemonDetails
+}
+
+var pokedex = Pokedex{
+	CurrentLocation: PokeLocations{
+		Next:     DefaultApiLocationsUri,
+		Previous: nil,
+	},
+	Pokemon: make(map[string]PokemonDetails),
 }
 
 func main() {
-	pokeData := PokeLocations{
-		Next:     DefaultApiLocationsUri,
-		Previous: nil,
+	commands := []CliCommand{
+		{
+			Command:     "help",
+			Description: "Displays this help message",
+			Callback:    commandHelp,
+		},
+		{
+			Command:     "exit",
+			Description: "Exits the application",
+			Callback:    commandExit,
+		}, {
+			Command:     "map",
+			Description: "Retrieves the next page of map locations",
+			Callback:    commandMap,
+		},
+		{
+			Command:     "mapb",
+			Description: "Retrieves the previous page of map locations",
+			Callback:    commandMapB,
+		},
+		{
+			Command:     "explore",
+			Description: "Explore the map location",
+			Callback:    commandExplore,
+		},
+		{
+			Command:     "catch",
+			Description: "Catch the pokemon",
+			Callback:    commandCatch,
+		},
 	}
-	commands := map[string]cliCommand{
-		"help": {
-			command:     "help",
-			description: "Displays this help message",
-			callback:    commandHelp,
-		},
-		"exit": {
-			command:     "exit",
-			description: "Exits the application",
-			callback:    commandExit,
-		},
-		"map": {
-			command:     "map",
-			description: "Retrieves the next page of map locations",
-			callback:    commandMap,
-		},
-		"mapb": {
-			command:     "mapb",
-			description: "Retrieves the previous page of map locations",
-			callback:    commandMapB,
-		},
-		"explore": {
-			command:     "explore",
-			description: "Explore the map location",
-			callback:    commandExplore,
-		},
-	}
+
+	cli := NewCliProcessor(commands)
 
 	for {
 		fmt.Print("\033[32mPokedex > \033[0m")
 		scanner := bufio.NewScanner(os.Stdin)
 		ok := scanner.Scan()
 
-		var input string
 		if ok {
-			input = scanner.Text()
+			input := scanner.Text()
 			if len(input) == 0 {
 				continue
 			}
 
-			commandName, firstArg := getCommandNameAndArg(input)
-			command, ok := commands[*commandName]
-			if ok {
-				err := command.callback(&pokeData, firstArg)
-				if err != nil {
-					fmt.Println(err)
-				}
+			err := cli.ProcessCommand(input)
+			if err != nil {
+				fmt.Println(err)
 			}
 		}
 	}
 }
 
-func getCommandNameAndArg(input string) (*string, *string) {
-	args := strings.Fields(input)
-	if len(args) > 1 {
-		return &args[0], &args[1]
-	}
-
-	return &args[0], nil
-}
-
-func commandHelp(_ *PokeLocations, _ *string) error {
+func commandHelp(_ *string) error {
 	fmt.Println("PokeDex CLI")
 	fmt.Println("Usage:")
 	fmt.Println()
@@ -89,42 +85,44 @@ func commandHelp(_ *PokeLocations, _ *string) error {
 	fmt.Println("\tmapb\tDisplay the previous set of map locations")
 	fmt.Println("\thelp\tPrints this help text")
 	fmt.Println("\texit\tExits the application")
-	fmt.Println("\texplore\tExplore the map location")
+	fmt.Println("\texplore <area name>\tExplore the map location")
+	fmt.Println("\tcatch <pokemon name>\tAttempt to catch the pokemon")
 	fmt.Println()
 	return nil
 }
 
-func commandExit(_ *PokeLocations, _ *string) error {
+func commandExit(_ *string) error {
 	os.Exit(0)
 	return nil
 }
 
-func commandMap(pokeData *PokeLocations, _ *string) error {
-	err := pokeData.GetNextLocations()
+func commandMap(_ *string) error {
+	err := pokedex.CurrentLocation.GetNextLocations()
 	if err != nil {
 		return err
 	}
 
-	printLocations(pokeData)
+	printLocations(&pokedex.CurrentLocation)
 	return nil
 }
 
-func commandMapB(pokeData *PokeLocations, _ *string) error {
-	err := pokeData.GetPreviousLocations()
+func commandMapB(_ *string) error {
+	err := pokedex.CurrentLocation.GetPreviousLocations()
 	if err != nil {
 		return err
 	}
 
-	printLocations(pokeData)
+	printLocations(&pokedex.CurrentLocation)
 	return nil
 }
+
 func printLocations(locations *PokeLocations) {
 	for i := 0; i < len(locations.Results); i++ {
 		fmt.Println(locations.Results[i].Name)
 	}
 }
 
-func commandExplore(_ *PokeLocations, locationName *string) error {
+func commandExplore(locationName *string) error {
 	if locationName == nil {
 		return errors.New("Please provide a location name")
 	}
@@ -138,6 +136,34 @@ func commandExplore(_ *PokeLocations, locationName *string) error {
 	}
 
 	printPokemon(pokemon)
+	return nil
+}
+
+func commandCatch(pokemonName *string) error {
+	if pokemonName == nil {
+		return errors.New("Please provide a pokemon name")
+	}
+
+	fmt.Printf("Throwing a Pokeball at: %v...\n", *pokemonName)
+
+	pokemonDetails, err := GetPokemonDetails(pokemonName)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Pokemon Details: %v\n", pokemonDetails.BaseExperience)
+
+	random := rand.Intn(pokemonDetails.BaseExperience)
+
+	if random > 100 {
+		fmt.Printf("%v ran away!\n", *pokemonName)
+		return nil
+	} else {
+		fmt.Printf("%v was caught!\n", *pokemonName)
+	}
+
+	pokedex.Pokemon[*pokemonName] = *pokemonDetails
+
 	return nil
 }
 
