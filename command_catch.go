@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ydiren/pokedexcli/internal/pokeapi"
 	"math/rand"
+	"strings"
 )
 
 func commandCatch(pokemonName *string) error {
@@ -30,7 +31,8 @@ func commandCatch(pokemonName *string) error {
 		fmt.Printf("%s was caught!\n", *pokemonName)
 	}
 
-	pokedex.CaughtPokemon[*pokemonName] = *pokemonDetails
+	key := strings.ToLower(*pokemonName)
+	pokedex.CaughtPokemon[key] = *pokemonDetails
 
 	return nil
 }
